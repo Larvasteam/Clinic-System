@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Expiry Alerts - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head"><h1>Expiry Alerts <span class="tag">{{ medicines|length }} medicines</span></h1></div>
+
+  <div class="stats">
+    <div class="stat"><div><div class="label">Expired</div><div class="value">{{ expired_count }}</div></div>
+      <div class="ico-box red"><svg class="ic"><use href="#i-xcircle"/></svg></div></div>
+    <div class="stat"><div><div class="label">Expiring within 6 months</div><div class="value">{{ soon_count }}</div></div>
+      <div class="ico-box amber"><svg class="ic"><use href="#i-clock"/></svg></div></div>
+  </div>
+
+  <div class="table-card"><table>
+    <tr><th>Medicine</th><th>Expiry date</th><th class="num">Days left</th><th class="num">In stock</th><th>Status</th></tr>
+    {% for m in medicines %}
+      <tr>
+        <td><div class="med"><div class="med-ico"><svg class="ic"><use href="#i-pill"/></svg></div><div><b>{{ m.name }}</b><span>{{ m.sku }}</span></div></div></td>
+        <td>{{ m.expiry_date }}</td>
+        <td class="num">{{ m.days_left }}</td>
+        <td class="num total">{{ m.quantity }}</td>
+        <td>{% if m.expired %}<span class="pill red">Expired</span>{% else %}<span class="pill yellow">Expiring Soon</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">Nothing is expired or close to expiring.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endblock %}

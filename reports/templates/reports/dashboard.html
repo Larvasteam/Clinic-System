@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load clinic_extras %}
+{% block title %}Dashboard - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head"><h1>Dashboard</h1></div>
+
+  <h2 class="first">Stock overview</h2>
+  <div class="stats">
+    <div class="stat"><div><div class="label">Total units in stock</div><div class="value">{{ total_units }}</div>
+      <div class="sub">{{ medicines|length }} medicines</div></div>
+      <div class="ico-box"><svg class="ic"><use href="#i-box"/></svg></div></div>
+    <div class="stat"><div><div class="label">High stock (green)</div><div class="value">{{ counts.green }}</div></div>
+      <div class="ico-box green"><svg class="ic"><use href="#i-check"/></svg></div></div>
+    <div class="stat"><div><div class="label">Medium stock (yellow)</div><div class="value">{{ counts.yellow }}</div></div>
+      <div class="ico-box amber"><svg class="ic"><use href="#i-alert"/></svg></div></div>
+    <div class="stat"><div><div class="label">Low stock (red)</div><div class="value">{{ counts.red }}</div></div>
+      <div class="ico-box red"><svg class="ic"><use href="#i-xcircle"/></svg></div></div>
+  </div>
+
+  {% if can_see_money %}
+    <h2>Money earned</h2>
+    <div class="table-card"><table>
+      <tr><th>Period</th><th class="num">USD balance</th><th class="num">ZiG balance</th><th class="num">Total (USD value)</th></tr>
+      {% for label, t in periods %}
+        <tr>
+          <td><b>{{ label }}</b>
+            <div class="sub">Consultations {{ t.fees|usd }} · Medicines {{ t.meds|usd }}</div></td>
+          <td class="num">{{ t.usd_received|usd }}</td>
+          <td class="num">{{ t.zwg_received|zig }}</td>
+          <td class="num total">{{ t.total_usd|usd }}</td>
+        </tr>
+      {% endfor %}
+    </table></div>
+    <p class="small">The USD balance is cash received in US dollars. The ZiG balance is cash received in ZiG.
+      The total counts each ZiG payment at the rate that applied when it was paid.</p>
+  {% endif %}
+
+  {% if expiring %}
+    <h2>Expiring within 6 months (or expired)</h2>
+    <div class="table-card"><table>
+      <tr><th>Medicine</th><th>Expiry date</th><th class="num">In stock</th></tr>
+      {% for m in expiring %}
+        <tr>
+          <td><div class="med"><div class="med-ico"><svg class="ic"><use href="#i-pill"/></svg></div><div><b>{{ m.name }}</b><span>{{ m.sku }}</span></div></div></td>
+          <td class="warn">{{ m.expiry_date }}</td><td class="num">{{ m.quantity }}</td>
+        </tr>
+      {% endfor %}
+    </table></div>
+  {% endif %}
+
+  <h2>Medicine stock</h2>
+  <div class="table-card"><table>
+    <tr><th>Medicine</th><th>Status</th><th>Expiry</th><th class="num">Quantity</th><th class="num">Unit price</th></tr>
+    {% for m in medicines %}
+      <tr>
+        <td><div class="med"><div class="med-ico"><svg class="ic"><use href="#i-pill"/></svg></div><div><b>{{ m.name }}</b><span>{{ m.sku }}</span></div></div></td>
+        <td><span class="pill {{ m.stock_colour }}">{{ m.stock_status }}</span></td>
+        <td>{% if m.expiry_date %}{{ m.expiry_date }}{% else %}-{% endif %}</td>
+        <td class="num">{{ m.quantity }}</td>
+        <td class="num total">{{ m.unit_price|usd }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">No medicines yet.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endblock %}

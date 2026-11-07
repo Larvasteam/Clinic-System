@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Exchange Rate - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Exchange Rate</h1>
+    <div class="actions">
+      {% if perms.billing.add_exchangerate %}
+        <form method="post" action="{% url 'rate_fetch' %}" style="display:inline">{% csrf_token %}
+          <button class="btn" type="submit">Fetch the latest rate now</button></form>
+        <a class="btn primary" href="{% url 'rate_add' %}"><svg class="ic"><use href="#i-plus"/></svg>Set rate by hand</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div>
+      <div class="label">Current rate</div>
+      {% if current %}
+        <div class="value">{{ current.usd_to_zwg|floatformat:4 }} <span class="cur">ZiG per 1 USD</span></div>
+        <div class="sub">{{ current.date|date:"j M Y" }} · {{ current.source|default:"-" }}</div>
+        {% if rate_stale %}<div class="sub warn">This rate is {{ current.age_days }} days old.</div>{% endif %}
+      {% else %}
+        <div class="value" style="font-size:20px">No rate set yet</div>
+        <div class="sub">Until a rate is set, payments can only be recorded in US dollars.</div>
+      {% endif %}
+    </div><div class="ico-box"><svg class="ic"><use href="#i-dollar"/></svg></div></div>
+  </div>
+  <p class="small">Every visit and sale saves the rate that applied when it was paid, so changing the rate never changes
+    old records. Fetched rates are the RBZ interbank middle rate when an AllRatesToday key is configured.</p>
+
+  <h2>Recent rates</h2>
+  <div class="table-card"><table>
+    <tr><th>Date</th><th>Source</th><th>Entered by</th><th class="num">ZiG per 1 USD</th></tr>
+    {% for r in rates %}
+      <tr><td>{{ r.date|date:"j M Y" }}</td><td>{{ r.source|default:"-" }}</td><td>{{ r.created_by|default:"automatic" }}</td>
+          <td class="num total">{{ r.usd_to_zwg|floatformat:4 }}</td></tr>
+    {% empty %}
+      <tr><td colspan="4">No rates recorded.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endblock %}

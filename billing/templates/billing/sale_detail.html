@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load clinic_extras %}
+{% block title %}Sale #{{ sale.pk }} - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head no-print">
+    <h1>Sale #{{ sale.pk }}</h1>
+    <div class="actions">
+      <a class="btn" href="{% url 'patient_history' sale.patient_id %}">Patient history</a>
+      <button class="btn primary" type="button" onclick="window.print()"><svg class="ic"><use href="#i-print"/></svg>Print receipt</button>
+    </div>
+  </div>
+  <div class="receipt">
+    <h2>Lupane State University Clinic</h2>
+    <p class="small">Receipt for sale #{{ sale.pk }} · {{ sale.created_at|date:"j M Y, H:i" }}</p>
+    <div class="kv" style="padding-left:0;padding-right:0"><span>Patient</span><span>{{ sale.patient }}</span></div>
+    <div class="kv" style="padding-left:0;padding-right:0"><span>Payment</span>
+      <span>{{ sale.get_payment_method_display }}{% if sale.payment_reference %} · {{ sale.payment_reference }}{% endif %}</span></div>
+    <div class="kv" style="padding-left:0;padding-right:0"><span>Paid in</span>
+      <span>{% if sale.currency == 'ZWG' %}ZiG{% else %}US dollars{% endif %}</span></div>
+    <div class="kv" style="padding-left:0;padding-right:0"><span>Served by</span><span>{{ sale.created_by|default:"-" }}</span></div>
+    <table style="margin-top:14px">
+      <tr><th>Medicine</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr>
+      {% for i in sale.items.all %}
+        <tr><td>{{ i.medicine.name }}</td><td class="num">{{ i.quantity }}</td>
+            <td class="num">{{ i.unit_price|usd }}</td><td class="num total">{{ i.line_total|usd }}</td></tr>
+      {% endfor %}
+      <tr><td colspan="3" class="num"><b>Total (USD)</b></td><td class="num total">{{ sale.total|usd }}</td></tr>
+      {% if sale.exchange_rate %}
+      <tr><td colspan="3" class="num"><b>Total (ZiG)</b></td><td class="num total">{{ sale.amount_zwg|zig }}</td></tr>
+      {% endif %}
+      <tr><td colspan="3" class="num"><b>Amount paid</b></td><td class="num total">{{ sale|paid }}</td></tr>
+    </table>
+    {% if sale.exchange_rate %}<p class="small">Rate used: 1 USD = {{ sale.exchange_rate|floatformat:4 }} ZiG, fixed when this sale was recorded.</p>{% endif %}
+  </div>
+{% endblock %}

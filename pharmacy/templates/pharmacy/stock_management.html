@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load clinic_extras %}
+{% block title %}Stock Management - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Stock Management</h1>
+    <div class="actions">
+      <a class="btn" href="{% url 'medicine_list' %}">Open a medicine to adjust its stock</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div><div class="label">Total Stock Value</div><div class="value">{{ total_value|usd }}</div></div>
+      <div class="ico-box"><svg class="ic"><use href="#i-dollar"/></svg></div></div>
+    <div class="stat"><div><div class="label">Total Medicines</div><div class="value">{{ total_skus }}</div></div>
+      <div class="ico-box"><svg class="ic"><use href="#i-box"/></svg></div></div>
+    <div class="stat"><div><div class="label">Low Stock Items</div><div class="value">{{ low }}</div></div>
+      <div class="ico-box amber"><svg class="ic"><use href="#i-alert"/></svg></div></div>
+    <div class="stat"><div><div class="label">Out of Stock</div><div class="value">{{ out }}</div></div>
+      <div class="ico-box red"><svg class="ic"><use href="#i-xcircle"/></svg></div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-head">Stock Levels by Medicine</div>
+    <div class="legend"><span><i style="background:#1f2937"></i>Available Qty</span><span><i style="background:#c62828"></i>Reorder Level</span></div>
+    {% if chart %}
+    <div class="chart">
+      <div class="yaxis">{% for t in ticks %}<span>{{ t }}</span>{% endfor %}</div>
+      <div class="plot">
+        <div class="bars">
+          {% for c in chart %}
+            <div class="grp" title="{{ c.name }}: {{ c.qty }} in stock, reorder at {{ c.reorder }}">
+              <div class="bar qty" style="height:{{ c.qty_pct|floatformat:1 }}%"></div>
+              <div class="bar reorder" style="height:{{ c.reorder_pct|floatformat:1 }}%"></div>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="labels">{% for c in chart %}<div>{{ c.name }}</div>{% endfor %}</div>
+      </div>
+    </div>
+    {% else %}
+      <div class="chart"><span>No medicines yet.</span></div>
+    {% endif %}
+  </div>
+
+  <form class="toolbar" method="get">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search by medicine">
+    <button class="btn primary" type="submit">Search</button>
+  </form>
+
+  <div class="table-card"><table>
+    <tr><th>Medicine</th><th class="num">Available Qty</th><th class="num">Reorder Level</th><th>Last Updated</th><th>Status</th></tr>
+    {% for m in medicines %}
+      <tr>
+        <td><div class="med"><div class="med-ico"><svg class="ic"><use href="#i-pill"/></svg></div><div><b>{{ m.name }}</b><span>{{ m.sku }}</span></div></div></td>
+        <td class="num total">{{ m.quantity }}</td>
+        <td class="num">{{ m.low_threshold }}</td>
+        <td>{% if m.last_updated %}{{ m.last_updated|date:"j M Y, H:i" }}{% else %}-{% endif %}</td>
+        <td><span class="pill {{ m.stock_colour }}">{{ m.stock_status }}</span></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">No medicines found.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endblock %}
