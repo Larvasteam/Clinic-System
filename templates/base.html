@@ -1,0 +1,280 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Clinic System{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #b42318; --primary-dark: #8f1d14; --primary-soft: #fdeaea;
+            --ink: #1f2937; --muted: #6b7280; --line: #e5e7eb; --page: #f3f4f6;
+            --green: #2e7d32; --amber: #f9a825; --red: #c62828; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink);
+           font-family: Inter, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; font-size: 15px; }
+    .ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8;
+          stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+    /* ---------- layout ---------- */
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar { width: 280px; background: #fff; border-right: 1px solid var(--line); position: sticky; top: 0;
+               height: 100vh; display: flex; flex-direction: column; overflow-y: auto; flex: none; }
+    .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar { background: #fff; border-bottom: 1px solid var(--line); padding: 14px 28px;
+              display: flex; align-items: center; gap: 16px; }
+    main { padding: 24px 28px; flex: 1; }
+    .footer { background: #fff; border-top: 1px solid var(--line); text-align: center; padding: 18px; font-size: 14px; }
+
+    /* ---------- sidebar ---------- */
+    .brand { display: flex; align-items: center; gap: 12px; padding: 18px 20px; text-decoration: none;
+             color: var(--ink); border-bottom: 1px solid var(--line); }
+    .emblem { width: 50px; height: 51px; flex: none;
+              background: url("{% static 'accounts/lsu-logo.png' %}") no-repeat left center;
+              background-size: auto 100%; }
+    .brand-name { font-size: 16px; font-weight: 700; line-height: 1.25; }
+    .brand-sub { font-size: 15px; color: var(--muted); }
+    .menu { padding: 18px 16px; flex: 1; }
+    .nav-label { color: var(--muted); font-size: 14px; padding: 0 12px 10px; }
+    .nav-item, .sub-item { display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 4px;
+              border-radius: 8px; border: 1px solid transparent; color: var(--ink); text-decoration: none;
+              font-size: 16px; font-weight: 500; background: none; width: 100%; font-family: inherit; cursor: pointer; }
+    .nav-item:hover, .sub-item:hover { color: var(--primary); }
+    .nav-item.active { border-color: var(--line); color: var(--primary); background: #fff; }
+    summary { list-style: none; } summary::-webkit-details-marker { display: none; }
+    .chev { margin-left: auto; width: 16px; height: 16px; } details[open] .chev { transform: rotate(180deg); }
+    details[open] > summary { border-color: var(--line); color: var(--primary); }
+    .sub-item { padding: 9px 12px 9px 44px; font-size: 15px; color: var(--muted); }
+    .sub-item.active { color: var(--primary); font-weight: 600; }
+    .side-foot { padding: 12px 16px 20px; border-top: 1px solid var(--line); margin: 0; }
+
+    /* ---------- topbar ---------- */
+    .icon-btn { display: none; background: none; border: 1px solid var(--line); border-radius: 6px;
+                padding: 8px; cursor: pointer; color: var(--ink); }
+    .search { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line);
+              border-radius: 6px; padding: 0 12px; background: #fff; color: var(--muted); }
+    .search input { border: none; outline: none; padding: 11px 0; width: 100%; font-family: inherit;
+                    font-size: 15px; background: transparent; color: var(--ink); }
+    .rate { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--ink); border: 1px solid var(--line);
+            border-radius: 6px; padding: 8px 12px; background: #fff; white-space: nowrap; }
+    .rate span { color: var(--muted); font-weight: 400; margin-left: 6px; }
+    .rate.stale { border-color: var(--amber); background: #fff8e1; }
+    .rate + .me { margin-left: 0; }
+    .me { margin-left: auto; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-soft); color: var(--primary);
+              display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+
+    /* ---------- page pieces ---------- */
+    .page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+                 padding-bottom: 18px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+    .page-head h1 { margin: 0; font-size: 28px; font-weight: 700; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .tag { font-size: 15px; font-weight: 500; color: var(--primary); border: 1px solid var(--primary);
+           border-radius: 4px; padding: 3px 9px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 6px;
+           border: 1px solid var(--line); background: #fff; color: var(--ink); font-family: inherit;
+           font-size: 15px; font-weight: 500; text-decoration: none; cursor: pointer; }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.primary:hover { background: var(--primary-dark); }
+    h2 { font-size: 20px; font-weight: 700; margin: 28px 0 14px; color: var(--ink); }
+    h2.first { margin-top: 0; }
+    .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; border: 1px solid var(--line); background: #fff; }
+    .alert.success { border-color: #b7dfbb; background: #eef8ef; color: #1b5e20; }
+    .alert.error { border-color: #f1b5b0; background: var(--primary-soft); color: var(--primary-dark); }
+    .alert ul { margin: 0; padding-left: 18px; }
+
+    .stats, .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat, .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; }
+    .stat { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .stat .label, .card h3 { font-size: 15px; font-weight: 400; color: var(--muted); margin: 0; }
+    .stat .value, .big { font-size: 30px; font-weight: 700; margin-top: 6px; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .cur { font-size: 15px; font-weight: 600; color: var(--muted); }
+    .sub, .small { font-size: 13px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .ico-box { width: 50px; height: 50px; border: 1px solid var(--primary); border-radius: 8px; color: var(--primary);
+               display: flex; align-items: center; justify-content: center; flex: none; }
+    .ico-box.green { border-color: var(--green); color: var(--green); }
+    .ico-box.amber { border-color: var(--amber); color: var(--amber); }
+    .ico-box.red { border-color: var(--red); color: var(--red); }
+
+    .table-card, .scroll { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--line); font-size: 15px; }
+    th { font-weight: 600; font-size: 16px; color: var(--ink); }
+    tr:last-child td { border-bottom: none; }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td.total { font-weight: 700; }
+    td a { color: var(--primary); text-decoration: none; font-weight: 500; margin-right: 12px; }
+    td a:hover { text-decoration: underline; }
+    tr.clickable { cursor: pointer; } tr.clickable:hover { background: #fafafa; }
+    .med { display: flex; align-items: center; gap: 14px; }
+    .med-ico { width: 50px; height: 50px; border-radius: 8px; background: var(--primary-soft); color: var(--primary);
+               display: flex; align-items: center; justify-content: center; flex: none; }
+    .med b { display: block; font-size: 16px; font-weight: 600; }
+    .med span { font-size: 14px; color: var(--muted); }
+    .pill, .badge { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #fff; }
+    .pill.green { background: var(--green); } .pill.yellow { background: var(--amber); color: #222; } .pill.red { background: var(--red); }
+    .warn { color: var(--red); font-weight: 600; }
+
+    .toolbar, .filters { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .filters { justify-content: flex-start; margin-bottom: 8px; }
+    .toolbar input, .toolbar select, .filters input, .filters select { padding: 10px 14px; border: 1px solid var(--line);
+             border-radius: 6px; background: #fff; font-family: inherit; font-size: 15px; color: var(--ink); }
+    .toolbar input { min-width: 260px; }
+    .toolbar input:focus, .toolbar select:focus, .filters input:focus, .filters select:focus { outline: none; border-color: var(--primary); }
+
+    /* ---------- forms ---------- */
+    .panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 26px; max-width: 760px; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+    .field input[type=text], .field input[type=number], .field input[type=date], .field select, .field textarea,
+    .items select, .items input { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+             font-family: inherit; font-size: 15px; background: #fff; color: var(--ink); }
+    .field input:focus, .field select:focus, .field textarea:focus, .items select:focus, .items input:focus {
+             outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .field small { display: block; color: var(--muted); margin-top: 4px; font-size: 13px; }
+    .field.check label { display: flex; gap: 10px; align-items: center; font-weight: 500; }
+    .field.check input { width: auto; }
+    .err { color: var(--red); font-size: 13px; margin-top: 4px; }
+    .items { margin-bottom: 12px; }
+    .items td, .items th { padding: 8px 10px; }
+
+    /* ---------- details drawer ---------- */
+    .overlay { position: fixed; inset: 0; background: rgba(31,41,55,.45); display: none; z-index: 40; }
+    .overlay.open { display: block; }
+    .drawer { position: fixed; top: 0; right: 0; height: 100%; width: min(480px, 100%); background: #fff; z-index: 50;
+              transform: translateX(100%); transition: transform .25s; overflow-y: auto; }
+    .drawer.open { transform: none; }
+    .drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .drawer-head h3 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .x-btn { background: none; border: none; cursor: pointer; color: var(--ink); padding: 4px; }
+    .drawer-sec { background: #f3f4f6; padding: 14px 20px; font-weight: 700; font-size: 18px; }
+    .kv { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; }
+    .kv span:first-child { font-weight: 600; } .kv span:last-child { color: var(--muted); text-align: right; }
+    .move { padding: 12px 20px; border-bottom: 1px solid var(--line); }
+    .move b { display: block; } .move span { font-size: 14px; color: var(--muted); }
+    .drawer-foot { padding: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .drawer-foot .btn { flex: 1; justify-content: center; }
+
+    /* ---------- stock chart ---------- */
+    .chart-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 24px; }
+    .chart-head { padding: 18px 24px; border-bottom: 1px solid var(--line); font-size: 20px; font-weight: 700; }
+    .legend { display: flex; justify-content: flex-end; gap: 18px; padding: 16px 24px 0; font-size: 14px; color: var(--muted); }
+    .legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
+    .chart { display: flex; padding: 16px 24px 22px; gap: 12px; }
+    .yaxis { display: flex; flex-direction: column; justify-content: space-between; height: 240px; font-size: 13px;
+             color: var(--muted); text-align: right; min-width: 36px; }
+    .plot { flex: 1; overflow-x: auto; }
+    .bars { display: flex; align-items: flex-end; gap: 28px; height: 240px; border-bottom: 1px solid var(--line);
+            min-width: max-content; padding: 0 12px;
+            background: repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), var(--line) calc(25% - 1px), var(--line) 25%); }
+    .grp { display: flex; align-items: flex-end; gap: 4px; height: 100%; }
+    .bar { width: 26px; border-radius: 4px 4px 0 0; min-height: 2px; }
+    .bar.qty { background: #1f2937; } .bar.reorder { background: var(--red); }
+    .labels { display: flex; gap: 28px; padding: 8px 12px 0; min-width: max-content; font-size: 13px; color: var(--muted); }
+    .labels div { width: 56px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ---------- receipt ---------- */
+    .receipt { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 28px; max-width: 760px; }
+    .receipt h2 { margin-top: 0; }
+
+    @media (max-width: 900px) {
+      .sidebar { position: fixed; left: -300px; z-index: 30; transition: left .2s; box-shadow: 0 0 30px rgba(0,0,0,.15); }
+      body.nav-open .sidebar { left: 0; }
+      .icon-btn { display: flex; }
+      main { padding: 18px 14px; }
+    }
+    @media print { .sidebar, .topbar, .footer, .no-print { display: none !important; } body { background: #fff; }
+                   main { padding: 0; } .receipt { border: none; } }
+  </style>
+</head>
+<body>
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-pill" viewBox="0 0 24 24"><path d="M10.5 20.5a5 5 0 0 1-7-7l9-9a5 5 0 0 1 7 7l-9 9z"/><path d="M8.5 8.5l7 7"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1"/><path d="M16 4.5a4 4 0 0 1 0 7M22 21v-1a6 6 0 0 0-4-5.6"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-xcircle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></symbol>
+    <symbol id="i-dollar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.4-.9-1.4-1.5-2.8-1.5-1.5 0-2.6.8-2.6 2s1 1.6 2.6 1.9c1.6.3 2.6.8 2.6 2s-1.1 2-2.6 2c-1.4 0-2.4-.6-2.8-1.5M12 6v1.7M12 16.3V18"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4v-7h16v7h-2"/><rect x="6" y="14" width="12" height="7"/></symbol>
+  </svg>
+
+  <div class="shell">
+    <aside class="sidebar no-print">
+      <a class="brand" href="{% url 'dashboard' %}">
+        <div class="emblem"></div>
+        <div><div class="brand-name">Lupane State University</div><div class="brand-sub">Clinic System</div></div>
+      </a>
+      {% with n=request.resolver_match.url_name %}
+      <nav class="menu">
+        <div class="nav-label">Main Menu</div>
+        <a class="nav-item {% if n == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><svg class="ic"><use href="#i-grid"/></svg>Dashboard</a>
+        <a class="nav-item {% if n == 'medicine_list' or n == 'medicine_add' or n == 'medicine_edit' or n == 'medicine_stock' %}active{% endif %}" href="{% url 'medicine_list' %}"><svg class="ic"><use href="#i-pill"/></svg>Medicines</a>
+        {% if can_stock %}
+        <details {% if n == 'stock_management' or n == 'expiry_alerts' %}open{% endif %}>
+          <summary class="nav-item"><svg class="ic"><use href="#i-box"/></svg>Inventory<svg class="ic chev"><use href="#i-chev"/></svg></summary>
+          <a class="sub-item {% if n == 'stock_management' %}active{% endif %}" href="{% url 'stock_management' %}">Stock Management</a>
+          <a class="sub-item {% if n == 'expiry_alerts' %}active{% endif %}" href="{% url 'expiry_alerts' %}">Expiry Alerts</a>
+        </details>
+        {% endif %}
+        <a class="nav-item {% if n == 'patient_list' or n == 'patient_add' or n == 'patient_edit' or n == 'patient_history' %}active{% endif %}" href="{% url 'patient_list' %}"><svg class="ic"><use href="#i-users"/></svg>Patients</a>
+        {% if perms.billing.add_visit or perms.billing.add_sale or perms.billing.view_exchangerate %}
+        <details {% if n == 'visit_add' or n == 'sale_add' or n == 'sale_detail' or n == 'rate_list' or n == 'rate_add' %}open{% endif %}>
+          <summary class="nav-item"><svg class="ic"><use href="#i-receipt"/></svg>Billing<svg class="ic chev"><use href="#i-chev"/></svg></summary>
+          {% if perms.billing.add_visit %}<a class="sub-item {% if n == 'visit_add' %}active{% endif %}" href="{% url 'visit_add' %}">New Visit</a>{% endif %}
+          {% if perms.billing.add_sale %}<a class="sub-item {% if n == 'sale_add' %}active{% endif %}" href="{% url 'sale_add' %}">New Sale</a>{% endif %}
+          {% if perms.billing.view_exchangerate %}<a class="sub-item {% if n == 'rate_list' or n == 'rate_add' %}active{% endif %}" href="{% url 'rate_list' %}">Exchange Rate</a>{% endif %}
+        </details>
+        {% endif %}
+        {% if can_sheets %}
+        <a class="nav-item {% if n == 'sheet' %}active{% endif %}" href="{% url 'sheet' %}"><svg class="ic"><use href="#i-chart"/></svg>Reports</a>
+        {% endif %}
+        {% if request.user.is_staff %}
+        <a class="nav-item" href="{% url 'admin:index' %}"><svg class="ic"><use href="#i-gear"/></svg>Administration</a>
+        {% endif %}
+      </nav>
+      {% endwith %}
+      <form class="side-foot" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="nav-item" type="submit"><svg class="ic"><use href="#i-logout"/></svg>Log out</button>
+      </form>
+    </aside>
+
+    <div class="content">
+      <header class="topbar no-print">
+        <button id="menu-btn" class="icon-btn" type="button" aria-label="Menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+        <form class="search" action="{% url 'search' %}" method="get">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input type="search" name="q" placeholder="Search medicines or patients">
+        </form>
+        {% if rate %}<div class="rate {% if rate_stale %}stale{% endif %}" title="{{ rate.source }}">1 USD = {{ rate.usd_to_zwg|floatformat:4 }} ZiG<span>{{ rate.date|date:"j M" }}{% if rate_stale %} · old{% endif %}</span></div>
+        {% else %}<div class="rate stale">No ZiG rate set</div>{% endif %}
+        <div class="me"><div class="avatar">{{ request.user.username|slice:":2"|upper }}</div><span>{{ request.user.username }}</span></div>
+      </header>
+      <main>
+        {% for message in messages %}<div class="alert {{ message.tags }}">{{ message }}</div>{% endfor %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="footer no-print">{% now "Y" %} © Lupane State University, Clinic System</footer>
+    </div>
+  </div>
+  <script>
+    document.getElementById('menu-btn').addEventListener('click', function () { document.body.classList.toggle('nav-open'); });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

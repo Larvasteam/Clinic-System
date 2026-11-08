@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load clinic_extras %}
+{% block title %}Search - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head"><h1>Search results {% if q %}<span class="tag">{{ q }}</span>{% endif %}</h1></div>
+  {% if not q %}
+    <p>Type a medicine name or a patient's name, surname or phone number in the search box.</p>
+  {% else %}
+    <h2 class="first">Medicines</h2>
+    <div class="table-card"><table>
+      <tr><th>Medicine</th><th class="num">Stock</th><th>Status</th><th class="num">Unit Price</th></tr>
+      {% for m in medicines %}
+        <tr>
+          <td><div class="med"><div class="med-ico"><svg class="ic"><use href="#i-pill"/></svg></div><div><b>{{ m.name }}</b><span>{{ m.sku }}</span></div></div></td>
+          <td class="num">{{ m.quantity }}</td>
+          <td><span class="pill {{ m.stock_colour }}">{{ m.stock_status }}</span></td>
+          <td class="num total">{{ m.unit_price|usd }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No medicines found.</td></tr>
+      {% endfor %}
+    </table></div>
+
+    <h2>Patients</h2>
+    <div class="table-card"><table>
+      <tr><th>Name</th><th class="num">Age</th><th>Gender</th><th>Phone</th><th></th></tr>
+      {% for p in patients %}
+        <tr><td>{{ p.first_name }} {{ p.surname }}</td><td class="num">{{ p.age }}</td>
+            <td>{{ p.get_gender_display }}</td><td>{{ p.phone|default:"-" }}</td>
+            <td><a href="{% url 'patient_history' p.pk %}">View history</a></td></tr>
+      {% empty %}
+        <tr><td colspan="5">No patients found.</td></tr>
+      {% endfor %}
+    </table></div>
+  {% endif %}
+{% endblock %}

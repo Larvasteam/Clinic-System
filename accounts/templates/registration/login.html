@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - Clinic System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --text: #1f2937; --muted: #6b7280; --red: #b42318; --red-dark: #8f1d14;
+            --red-soft: #fdeaea; --page: #f3f4f6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: var(--page);
+           color: var(--text); font-family: Inter, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; }
+    .topbar { background: #fff; margin: 0 6px; padding: 14px 28px; border-radius: 0 0 16px 16px;
+              box-shadow: 0 2px 12px rgba(0,0,0,.08); display: flex; align-items: center; gap: 20px; }
+    .emblem { width: 62px; height: 63px; background: url("{% static 'accounts/lsu-logo.png' %}") no-repeat left center;
+              background-size: auto 100%; }
+    .uni { font-size: 20px; font-weight: 600; }
+    .sub { font-size: 17px; color: var(--muted); margin-top: 2px; }
+    main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 24px 16px; }
+    .card { background: #fff; width: 100%; max-width: 420px; padding: 32px; border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08); }
+    .head { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .ico { width: 48px; height: 48px; border-radius: 12px; background: var(--red-soft);
+           display: flex; align-items: center; justify-content: center; flex: none; }
+    .ico svg { width: 24px; height: 24px; fill: none; stroke: var(--red); stroke-width: 1.8;
+               stroke-linecap: round; stroke-linejoin: round; }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; }
+    .desc { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+    label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+    input { width: 100%; padding: 11px 12px; margin-bottom: 18px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-family: inherit; font-size: 15px; background: #fff; }
+    input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+    button { width: 100%; padding: 12px; background: var(--red); color: #fff; border: none;
+             border-radius: 8px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button:hover { background: var(--red-dark); }
+    .error { color: #c62828; font-size: 14px; margin-top: 14px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="emblem"></div>
+    <div>
+      <div class="uni">Lupane State University</div>
+      <div class="sub">Clinic System</div>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></div>
+        <div><h1>Staff Login</h1><p class="desc">Access the Clinic System.</p></div>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        <button type="submit">Log in</button>
+        {% if form.errors %}<div class="error">Wrong username or password.</div>{% endif %}
+      </form>
+    </div>
+  </main>
+</body>
+</html>

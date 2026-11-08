@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load clinic_extras %}
+{% block title %}{{ period|title }} sheet - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head no-print"><h1>Reports</h1></div>
+  <form method="get" class="filters no-print">
+    <select name="period">
+      {% for p in allowed %}<option value="{{ p }}" {% if p == period %}selected{% endif %}>{{ p|title }}</option>{% endfor %}
+    </select>
+    <input type="date" name="date" value="{{ picked|date:'Y-m-d' }}">
+    <button class="btn primary" type="submit">View</button>
+    <button class="btn" type="button" onclick="window.print()"><svg class="ic"><use href="#i-print"/></svg>Print / Save as PDF</button>
+  </form>
+
+  <h2>{{ period|title }} sheet: {{ start|date:"j M Y" }}{% if start != end %} to {{ end|date:"j M Y" }}{% endif %}</h2>
+  <div class="table-card"><table>
+    <tr><th>Balance</th><th class="num">Amount received</th><th class="num">USD value</th></tr>
+    <tr><td>US dollars (USD)</td><td class="num">{{ summary.usd_received|usd }}</td><td class="num">{{ summary.usd_received|usd }}</td></tr>
+    <tr><td>ZiG (ZWG)</td><td class="num">{{ summary.zwg_received|zig }}</td><td class="num">{{ summary.zwg_in_usd|usd }}</td></tr>
+    <tr><td><b>Total earned</b></td><td class="num"></td><td class="num total">{{ summary.total_usd|usd }}</td></tr>
+  </table></div>
+  <p class="small">Consultation fees {{ summary.fees|usd }} · Medicine sales {{ summary.meds|usd }} (USD value).
+    ZiG payments are counted at the rate that applied when each one was paid.</p>
+
+  <h2>By payment method</h2>
+  <div class="table-card"><table>
+    <tr><th>Method</th><th>Currency</th><th class="num">Received</th><th class="num">USD value</th></tr>
+    {% for m in methods %}
+      <tr><td>{{ m.label }}</td><td>{% if m.currency == 'ZWG' %}ZiG{% else %}USD{% endif %}</td>
+          <td class="num">{% if m.currency == 'ZWG' %}{{ m.received|zig }}{% else %}{{ m.received|usd }}{% endif %}</td>
+          <td class="num total">{{ m.usd|usd }}</td></tr>
+    {% empty %}
+      <tr><td colspan="4">No payments in this period.</td></tr>
+    {% endfor %}
+  </table></div>
+
+  <h2>Medicines sold</h2>
+  <div class="table-card"><table>
+    <tr><th>Medicine</th><th class="num">Quantity</th><th class="num">Revenue</th></tr>
+    {% for r in sold %}
+      <tr><td>{{ r.medicine__name }}</td><td class="num">{{ r.qty }}</td><td class="num total">{{ r.revenue|usd }}</td></tr>
+    {% empty %}
+      <tr><td colspan="3">No medicines sold in this period.</td></tr>
+    {% endfor %}
+  </table></div>
+
+  <h2>Consultations</h2>
+  <div class="table-card"><table>
+    <tr><th>Date</th><th>Patient</th><th>Payment</th><th class="num">Fee (USD)</th><th class="num">Paid</th></tr>
+    {% for v in visits %}
+      <tr><td>{{ v.created_at|date:"j M, H:i" }}</td><td>{{ v.patient }}</td>
+          <td>{{ v.get_payment_method_display }}</td><td class="num">{{ v.consultation_fee|usd }}</td>
+          <td class="num total">{{ v|paid }}</td></tr>
+    {% empty %}
+      <tr><td colspan="5">No consultations in this period.</td></tr>
+    {% endfor %}
+  </table></div>
+
+  <h2>Medicine sales</h2>
+  <div class="table-card"><table>
+    <tr><th>Date</th><th>Patient</th><th>Medicines</th><th>Payment</th><th class="num">Total (USD)</th><th class="num">Paid</th></tr>
+    {% for s in sales %}
+      <tr><td>{{ s.created_at|date:"j M, H:i" }}</td><td>{{ s.patient }}</td>
+          <td>{% for i in s.items.all %}{{ i.medicine.name }} × {{ i.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+          <td>{{ s.get_payment_method_display }}</td><td class="num">{{ s.total|usd }}</td>
+          <td class="num total">{{ s|paid }}</td></tr>
+    {% empty %}
+      <tr><td colspan="6">No sales in this period.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endblock %}

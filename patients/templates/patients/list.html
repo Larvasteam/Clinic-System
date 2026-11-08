@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Patients - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Patients</h1>
+    <div class="actions">
+      {% if perms.patients.add_patient %}
+        <a class="btn primary" href="{% url 'patient_add' %}"><svg class="ic"><use href="#i-plus"/></svg>Add Patient</a>
+      {% endif %}
+    </div>
+  </div>
+  <form class="toolbar" method="get">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search by name, surname or phone">
+    <button class="btn primary" type="submit">Search</button>
+  </form>
+  <div class="table-card"><table>
+    <tr><th>Name</th><th class="num">Age</th><th>Gender</th><th>Phone</th><th></th></tr>
+    {% for p in patients %}
+      <tr>
+        <td><b>{{ p.first_name }} {{ p.surname }}</b></td>
+        <td class="num">{{ p.age }}</td>
+        <td>{{ p.get_gender_display }}</td>
+        <td>{{ p.phone|default:"-" }}</td>
+        <td>
+          <a href="{% url 'patient_history' p.pk %}">History</a>
+          {% if perms.billing.add_visit %}<a href="{% url 'visit_add' %}?patient={{ p.pk }}">New visit</a>{% endif %}
+          {% if perms.billing.add_sale %}<a href="{% url 'sale_add' %}?patient={{ p.pk }}">New sale</a>{% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">No patients found.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}New Sale - Clinic System{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>New Sale</h1>
+    <div class="actions"><a class="btn" href="{% url 'patient_list' %}">Cancel</a></div>
+  </div>
+  <form method="post" class="panel" style="max-width:900px">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
+    {% if formset.non_form_errors %}<div class="alert error">{{ formset.non_form_errors }}</div>{% endif %}
+    {% for field in form %}{% include 'partials/field.html' %}{% endfor %}
+
+    <h2 style="margin-top:8px">Medicines</h2>
+    {{ formset.management_form }}
+    <table class="items" id="items">
+      <thead><tr><th>Medicine</th><th style="width:130px">Quantity</th></tr></thead>
+      <tbody>
+        {% for f in formset %}
+          <tr class="item">
+            <td>{% for h in f.hidden_fields %}{{ h }}{% endfor %}{{ f.medicine }}
+              {% for e in f.medicine.errors %}<div class="err">{{ e }}</div>{% endfor %}</td>
+            <td>{{ f.quantity }}{% for e in f.quantity.errors %}<div class="err">{{ e }}</div>{% endfor %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button class="btn" type="button" id="add-row" style="margin-bottom:22px"><svg class="ic"><use href="#i-plus"/></svg>Add another medicine</button>
+    <div><button class="btn primary" type="submit">Record sale</button></div>
+  </form>
+
+  <template id="empty-row">
+    <tr class="item">
+      <td>{% for h in formset.empty_form.hidden_fields %}{{ h }}{% endfor %}{{ formset.empty_form.medicine }}</td>
+      <td>{{ formset.empty_form.quantity }}</td>
+    </tr>
+  </template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('add-row').addEventListener('click', function () {
+    var total = document.getElementById('id_items-TOTAL_FORMS');
+    var html = document.getElementById('empty-row').innerHTML.replace(/__prefix__/g, total.value);
+    document.querySelector('#items tbody').insertAdjacentHTML('beforeend', html);
+    total.value = parseInt(total.value, 10) + 1;
+  });
+</script>
+{% endblock %}
