@@ -37,6 +37,15 @@ class VisitRuleTests(TestCase):
 
 
 class SaleRuleTests(TestCase):
+
+    def test_contraceptive_refused_when_the_details_are_incomplete(self):
+    	from types import SimpleNamespace
+    	from .rules import check_contraceptive_allowed
+    	for gender, age, words in (('F', None, 'date of birth'), ('', 30, 'gender'), ('', None, 'gender')):
+            with self.assertRaises(ValidationError) as ctx:
+                check_contraceptive_allowed(SimpleNamespace(gender=gender, age=age))
+            assert words in str(ctx.exception)
+
     def setUp(self):
         setup_roles()
         self.pharmacist = make_user('Pharmacist')
@@ -138,13 +147,25 @@ class BillingPermissionTests(TestCase):
         assert Visit.objects.get().created_by == self.reception
         assert self.client.get(reverse('sale_add')).status_code == 403
 
-    def test_visit_form_refuses_a_low_fee(self):
+       def test_the_visit_fee_is_fixed_whatever_the_browser_sends(self):
         self.client.force_login(self.reception)
-        r = self.client.post(reverse('visit_add'), {
-            'patient': self.patient.pk, 'consultation_fee': '0.40', 'currency': 'USD', 'payment_method': 'cash',
-            'payment_reference': '', 'notes': ''})
-        self.assertContains(r, 'below 0.50')
-        assert not Visit.objects.exists()
+        for sent in ('0.40', '99.00', ''):
+            self.client.post(reverse('visit_add'), {
+                'patient': self.patient.pk, 'consultation_fee': sent, 'currency': 'USD', 'payment_method': 'cash',
+                'payment_reference': '', 'notes': ''})
+        assert Visit.objects.count() == 3
+        assert {v.consultation_fee for v in Visit.objects.all()} == {Decimal('5.00')}
+
+    def test_the_fee_comes_from_the_setting_and_is_shown_on_the_form(self):
+        self.client.force_login(self.reception)
+        page = self.client.get(reverse('visit_add'))
+        self.assertContains(page, 'value="5.00"')
+        self.assertContains(page, 'disabled')
+        with self.settings(CONSULTATION_FEE_USD=Decimal('7.50')):
+            self.client.post(reverse('visit_add'), {
+                'patient': self.patient.pk, 'currency': 'USD', 'payment_method': 'cash',
+                'payment_reference': '', 'notes': ''})
+        assert Visit.objects.get().consultation_fee == Decimal('7.50')
 
     def test_pharmacist_sells_but_cannot_record_visits(self):
         self.client.force_login(self.pharmacist)

@@ -89,11 +89,11 @@ class ZigPaymentTests(TestCase):
             Visit.objects.bulk_create([Visit(patient=self.patient, consultation_fee=Decimal('5'),
                                              payment_method='cash', currency='ZWG', exchange_rate=None)])
 
-    def test_the_minimum_payment_still_applies_to_zig_payments(self):
-        self.client.force_login(self.reception)
-        r = self.client.post(reverse('visit_add'), self.visit_post('ZWG', fee='0.40'))
-        self.assertContains(r, 'below 0.50')
-        assert not Visit.objects.exists()
+        def test_the_minimum_payment_still_applies_to_zig_payments(self):
+        visit = Visit(patient=self.patient, consultation_fee=Decimal('0.40'), payment_method='cash',
+                      currency='ZWG', exchange_rate=Decimal('26'))
+        with self.assertRaises(ValidationError):
+            visit.full_clean()
 
     def test_sale_in_zig(self):
         para = make_medicine('Paracetamol', '0.30', stock=100)

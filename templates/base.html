@@ -97,6 +97,11 @@
     .ico-box.green { border-color: var(--green); color: var(--green); }
     .ico-box.amber { border-color: var(--amber); color: var(--amber); }
     .ico-box.red { border-color: var(--red); color: var(--red); }
+    /* removes the square boxes around the stat-card icons (the coloured icon stays) */
+    .ico-box { border: none !important; width: auto; height: auto; }
+    .ico-box .ic { width: 30px; height: 30px; }
+    /* removes the pink squares next to each medicine name in the tables */
+    .med-ico { display: none; }
 
     .table-card, .scroll { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; margin-bottom: 8px; }
     table { width: 100%; border-collapse: collapse; }
